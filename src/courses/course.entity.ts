@@ -27,7 +27,7 @@ export class Course {
   @Expose()
   get image_url() {
     if (!this.image) return null;
-    return `${process.env.APP_URL}/uploads/courses/${this.image}`;
+    return `${process.env.APP_URL}/uploads/${this.image}`;
   }
 
   @Column()

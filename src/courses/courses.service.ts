@@ -5,12 +5,14 @@ import { Repository } from 'typeorm';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Multer } from 'multer';
+import { FilesService } from 'src/common/files/file.service';
 
 @Injectable()
 export class CoursesService {
   constructor(
     @InjectRepository(Course)
     private courseRepo: Repository<Course>,
+    private readonly filesService: FilesService,
   ) {}
 
   findAll() {
@@ -24,16 +26,28 @@ export class CoursesService {
   }
 
   async create(data: CreateCourseDto, file: Multer.File) {
+    const fileName = await this.filesService.optimizeImage(file);
+
     const course = this.courseRepo.create({
-        ...data,
-        image : file ? file.filename : null,
+      ...data,
+      image: fileName,
     });
     return this.courseRepo.save(course);
   }
 
-  async update(id: string, data: UpdateCourseDto) {
+  async update(id: string, data: UpdateCourseDto, file: Multer.File) {
     const course = await this.findOne(id);
-    Object.assign(course, data);
+
+    const fileName = await this.filesService.replaceFile(
+      course.image,
+      file,
+      "",
+    );
+
+    Object.assign(course, {
+      ...data,
+      image: fileName,
+    });
     return this.courseRepo.save(course);
   }
 

@@ -14,7 +14,7 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Multer } from 'multer';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileUploadInterceptor } from 'src/common/files/interceptors/file-upload.interceptor';
 
 @Controller('courses')
 export class CoursesController {
@@ -47,7 +47,7 @@ export class CoursesController {
       required: ['title', 'price', 'image'],
     },
   })
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileUploadInterceptor('image'))
   create(
     @Body() body: CreateCourseDto,
     @UploadedFile() file: Multer.File,
@@ -55,9 +55,26 @@ export class CoursesController {
     return this.coursesService.create(body, file);
   }
 
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', example: 'NestJS Mastery Course' },
+        description: {
+          type: 'string',
+          example: 'Learn NestJS from zero to advanced',
+        },
+        price: { type: 'number', example: 199000 },
+        image: { type: 'string', format: 'binary' },
+      },
+      required: ['title', 'price', 'image'],
+    },
+  })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: UpdateCourseDto) {
-    return this.coursesService.update(id, body);
+  @UseInterceptors(FileUploadInterceptor('image'))
+  update(@Param('id') id: string, @Body() body: UpdateCourseDto, @UploadedFile() file: Multer.File,) {
+    return this.coursesService.update(id, body, file);
   }
 
   @Delete(':id')

@@ -8,6 +8,7 @@ import { Course } from './courses/course.entity';
 import databaseConfig from './config/database.config';
 import appConfig from './config/app.config';
 import uploadConfig from './config/upload.config';
+import { FilesModule } from './common/files/file.module';
 
 @Module({
   imports: [
@@ -25,12 +26,13 @@ import uploadConfig from './config/upload.config';
         synchronize: true, //! Jangan true di production!
       }),
     }),
-    CoursesModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig, appConfig, uploadConfig],
       envFilePath: ".env"
     }),
+    CoursesModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
