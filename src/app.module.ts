@@ -9,6 +9,7 @@ import databaseConfig from './config/database.config';
 import appConfig from './config/app.config';
 import uploadConfig from './config/upload.config';
 import { FilesModule } from './common/files/file.module';
+import { SearchPaginationModule } from './common/search-pagination/search-pagination.module';
 
 @Module({
   imports: [
@@ -29,10 +30,11 @@ import { FilesModule } from './common/files/file.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig, appConfig, uploadConfig],
-      envFilePath: ".env"
+      envFilePath: '.env',
     }),
     CoursesModule,
     FilesModule,
+    SearchPaginationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
