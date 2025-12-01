@@ -17,6 +17,12 @@ async function bootstrap() {
     }),
   );
 
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+    credentials: true, // jika kamu pakai cookie/token
+  });
+
   const config = new DocumentBuilder()
     .setTitle('Course API')
     .setDescription('API CRUD untuk Course')
@@ -26,6 +32,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.APP_PORT ?? 3000);
 }
 bootstrap();
