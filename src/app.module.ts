@@ -10,6 +10,7 @@ import appConfig from './config/app.config';
 import uploadConfig from './config/upload.config';
 import { FilesModule } from './common/files/file.module';
 import { SearchPaginationModule } from './common/search-pagination/search-pagination.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { SearchPaginationModule } from './common/search-pagination/search-pagina
     CoursesModule,
     FilesModule,
     SearchPaginationModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
