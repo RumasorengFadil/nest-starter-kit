@@ -15,7 +15,7 @@ import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { ApiBody, ApiConsumes, ApiQuery } from '@nestjs/swagger';
-import { FileUploadInterceptor } from 'src/common/files/interceptors/file-upload.interceptor';
+import { FileUploadInterceptor } from 'src/shared/files/interceptors/file-upload.interceptor';
 
 @Controller('courses')
 export class CoursesController {

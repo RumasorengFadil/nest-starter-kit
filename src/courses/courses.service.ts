@@ -4,8 +4,8 @@ import { Course } from './course.entity';
 import { Repository } from 'typeorm';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
-import { FilesService } from 'src/common/files/file.service';
-import { SearchPaginationService } from 'src/common/search-pagination/search-pagination.service';
+import { FilesService } from 'src/shared/files/file.service';
+import { SearchPaginationService } from 'src/shared/search-pagination/search-pagination.service';
 
 @Injectable()
 export class CoursesService {
