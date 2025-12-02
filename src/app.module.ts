@@ -11,6 +11,7 @@ import uploadConfig from './config/upload.config';
 import { FilesModule } from './common/files/file.module';
 import { SearchPaginationModule } from './common/search-pagination/search-pagination.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { UserController } from './modules/user/infrastructure/http/user.controller';
 
 @Module({
   imports: [
@@ -38,7 +39,7 @@ import { AuthModule } from './modules/auth/auth.module';
     SearchPaginationModule,
     AuthModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, UserController],
   providers: [AppService],
 })
 export class AppModule {}
