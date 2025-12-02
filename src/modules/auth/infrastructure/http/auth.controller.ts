@@ -12,6 +12,14 @@ import type { Response as ExResponse } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../../domain/services/auth.service';
 import { JwtService } from '@nestjs/jwt';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { GetUser } from './get-user.decorator';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
@@ -21,12 +29,44 @@ export class AuthController {
     private jwtService: JwtService,
   ) {}
 
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current authenticated user' })
+  @ApiResponse({ status: 200, description: 'User info returned successfully' })
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  me(@GetUser() user) {
+    return user;
+  }
+
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+        password: { type: 'string', example: '12345678' },
+        name: { type: 'string', example: 'John Doe' },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'User registered successfully' })
   @Post('register')
   async register(@Body() body: { email: string; password: string }) {
     const user = await this.authService.register(body.email, body.password);
     return { ok: true, user: { id: user.id, email: user.email } };
   }
 
+  @ApiOperation({ summary: 'Login user and get tokens' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+        password: { type: 'string', example: '12345678' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Login successful' })
   @UseGuards(AuthGuard('local'))
   @Post('login')
   async login(
@@ -51,12 +91,20 @@ export class AuthController {
     return { ok: true };
   }
 
+  @ApiOperation({
+    summary: 'Redirect to Google OAuth Login',
+    description:
+      'This endpoint redirects the user to Google sign-in page. Cannot be tested via Swagger.',
+  })
+  @ApiResponse({ status: 302, description: 'Redirect to Google' })
   @Get('google')
   @UseGuards(AuthGuard('google'))
   googleAuth() {
     // initiates Google OAuth2 login flow
   }
 
+  @ApiOperation({ summary: 'Google OAuth callback handler' })
+  @ApiResponse({ status: 200, description: 'Google login successful' })
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(
@@ -84,6 +132,16 @@ export class AuthController {
     return res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
   }
 
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        refreshToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIs...' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Token refreshed' })
   @Post('refresh')
   async refresh(
     @Request() req,
@@ -115,6 +173,16 @@ export class AuthController {
     }
   }
 
+  @ApiOperation({ summary: 'Logout user (invalidate refresh token)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        refreshToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIs...' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Logged out successfully' })
   @Post('logout')
   async logout(
     @Request() req,
