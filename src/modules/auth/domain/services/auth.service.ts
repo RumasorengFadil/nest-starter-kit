@@ -6,6 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
 import { User } from 'src/modules/user/domain/entities/user.entity';
+import { AuthProvider } from 'src/modules/user/domain/provider/auth.provider';
 
 @Injectable()
 export class AuthService {
@@ -24,7 +25,7 @@ export class AuthService {
     const user = this.usersRepo.create({
       email,
       password: hash,
-      provider: 'local',
+      provider: AuthProvider.LOCAL,
     });
     return this.usersRepo.save(user);
   }
@@ -95,13 +96,13 @@ export class AuthService {
     if (!user) {
       user = this.usersRepo.create({
         email: email ?? null,
-        provider: 'google',
+        provider: AuthProvider.GOOGLE,
         providerId: profile.id,
       });
       user = await this.usersRepo.save(user);
     } else if (!user.providerId) {
       // link provider id if email exists
-      user.provider = 'google';
+      user.provider = AuthProvider.GOOGLE;
       user.providerId = profile.id;
       user = await this.usersRepo.save(user);
     }

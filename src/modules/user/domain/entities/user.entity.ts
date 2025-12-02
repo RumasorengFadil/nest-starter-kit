@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { AuthProvider } from '../provider/auth.provider';
 
 @Entity('users')
 export class User {
@@ -11,8 +12,8 @@ export class User {
   @Column({ nullable: true })
   password: string | null; // hashed
 
-  @Column({ default: 'local' })
-  provider: 'local' | 'google';
+  @Column({ type: 'enum', enum: AuthProvider, default: AuthProvider.LOCAL })
+  provider: AuthProvider;
 
   @Column({ nullable: true })
   providerId: string | null; // google id
