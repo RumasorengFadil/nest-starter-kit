@@ -21,7 +21,11 @@ export class AuthService {
     if (exists) throw new Error('Email already used');
 
     const hash = await bcrypt.hash(password, 10);
-    const user = this.usersRepo.create({ email, password: hash, provider: 'local' });
+    const user = this.usersRepo.create({
+      email,
+      password: hash,
+      provider: 'local',
+    });
     return this.usersRepo.save(user);
   }
 
@@ -36,14 +40,23 @@ export class AuthService {
   }
 
   async generateTokens(user: User) {
-    const payload = { sub: user.id, email: user.email, provider: user.provider };
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      provider: user.provider,
+    };
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.config.get('JWT_ACCESS_SECRET'),
       expiresIn: this.config.get('JWT_ACCESS_EXPIRATION'),
     });
-    // create refresh token random value (not JWT required, but can be JWT too)
-    const refreshToken = randomBytes(64).toString('hex');
 
+    const refreshToken = await this.jwtService.signAsync(
+      { sub: user.id },
+      {
+        secret: this.config.get('JWT_REFRESH_SECRET'),
+        expiresIn: this.config.get('JWT_REFRESH_EXPIRATION'),
+      },
+    );
     const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
     await this.usersRepo.update(user.id, { refreshTokenHash });
 
@@ -54,7 +67,10 @@ export class AuthService {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user || !user.refreshTokenHash) throw new UnauthorizedException();
 
-    const valid = await bcrypt.compare(providedRefreshToken, user.refreshTokenHash);
+    const valid = await bcrypt.compare(
+      providedRefreshToken,
+      user.refreshTokenHash,
+    );
     if (!valid) throw new UnauthorizedException();
 
     const tokens = await this.generateTokens(user);
@@ -66,9 +82,15 @@ export class AuthService {
   }
 
   // Upsert user from Google profile
-  async validateOAuthLogin(profile: { id: string; emails?: any[]; displayName?: string }) {
+  async validateOAuthLogin(profile: {
+    id: string;
+    emails?: any[];
+    displayName?: string;
+  }) {
     const email = profile.emails?.[0]?.value;
-    let user = await this.usersRepo.findOne({ where: [{ providerId: profile.id }, { email }] });
+    let user = await this.usersRepo.findOne({
+      where: [{ providerId: profile.id }, { email }],
+    });
 
     if (!user) {
       user = this.usersRepo.create({

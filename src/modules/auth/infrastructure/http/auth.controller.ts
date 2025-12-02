@@ -1,12 +1,25 @@
-import { Controller, Post, UseGuards, Request, Response, Get, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseGuards,
+  Request,
+  Response,
+  Get,
+  Body,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response as ExResponse } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../../domain/services/auth.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService, private config: ConfigService) {}
+  constructor(
+    private authService: AuthService,
+    private config: ConfigService,
+    private jwtService: JwtService,
+  ) {}
 
   @Post('register')
   async register(@Body() body: { email: string; password: string }) {
@@ -16,7 +29,10 @@ export class AuthController {
 
   @UseGuards(AuthGuard('local'))
   @Post('login')
-  async login(@Request() req, @Response({ passthrough: true }) res: ExResponse) {
+  async login(
+    @Request() req,
+    @Response({ passthrough: true }) res: ExResponse,
+  ) {
     const user = req.user;
     const tokens = await this.authService.generateTokens(user);
     // set cookies
@@ -43,7 +59,10 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleAuthRedirect(@Request() req, @Response({ passthrough: true }) res: ExResponse) {
+  async googleAuthRedirect(
+    @Request() req,
+    @Response({ passthrough: true }) res: ExResponse,
+  ) {
     // req.user from GoogleStrategy validate -> user entity
     const user = req.user;
     const tokens = await this.authService.generateTokens(user);
@@ -66,20 +85,41 @@ export class AuthController {
   }
 
   @Post('refresh')
-  async refresh(@Request() req, @Response({ passthrough: true }) res: ExResponse) {
-    const refreshToken = req.cookies['refresh_token'];
-    if (!refreshToken) {
-      return { ok: false, message: 'no refresh token' };
+  async refresh(
+    @Request() req,
+    @Response({ passthrough: true }) res: ExResponse,
+  ) {
+    const token = req.cookies['refresh_token'];
+    if (!token) return res.status(401).json({ ok: false });
+
+    try {
+      const payload: any = await this.jwtService.verifyAsync(token, {
+        secret: this.config.get('JWT_REFRESH_SECRET'),
+      });
+      // payload.sub is userId
+      const tokens = await this.authService.refreshTokens(payload.sub, token);
+
+      // set cookies again
+      res.cookie('access_token', tokens.accessToken, {
+        httpOnly: true,
+        maxAge: 15 * 60 * 1000,
+      });
+      res.cookie('refresh_token', tokens.refreshToken, {
+        httpOnly: true,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
+
+      return { ok: true };
+    } catch (err) {
+      return res.status(401).json({ ok: false });
     }
-    // extract user id from stored hashed? We need a mapping token->user: we stored hashed token in DB per user
-    // A simple way: issue refresh token that is random + store hash on user record; but need user id to call refreshTokens
-    // To know which user: we store userId in plain cookie? No. Alternative: make refresh token a signed JWT that contains sub=userId.
-    // For simplicity, here assume refresh token is random and we search user by comparing hash (inefficient). Better: use signed refresh JWT.
-    // We'll implement refresh as signed JWT below. -- For now assume refresh token is random but we included user id in cookie as httpOnly 'uid' (optional).
   }
 
   @Post('logout')
-  async logout(@Request() req, @Response({ passthrough: true }) res: ExResponse) {
+  async logout(
+    @Request() req,
+    @Response({ passthrough: true }) res: ExResponse,
+  ) {
     const userId = req.user?.userId || null;
     if (userId) {
       await this.authService.revokeRefreshToken(userId);
