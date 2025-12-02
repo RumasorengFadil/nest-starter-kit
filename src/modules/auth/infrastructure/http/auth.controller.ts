@@ -103,7 +103,7 @@ export class AuthController {
     // initiates Google OAuth2 login flow
   }
 
-  @ApiOperation({ summary: 'Google OAuth callback handler' })
+  @ApiOperation({ summary: 'Google OAuth callback handler', description:'This endpoint redirects the user to Google sign-in page. Cannot be tested via Swagger.' })
   @ApiResponse({ status: 200, description: 'Google login successful' })
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
@@ -147,6 +147,8 @@ export class AuthController {
     @Request() req,
     @Response({ passthrough: true }) res: ExResponse,
   ) {
+      console.log('COOKIES:', req.cookies);
+
     const token = req.cookies['refresh_token'];
     if (!token) return res.status(401).json({ ok: false });
 
