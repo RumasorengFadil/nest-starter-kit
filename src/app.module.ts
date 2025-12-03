@@ -8,12 +8,13 @@ import { Course } from './courses/course.entity';
 import databaseConfig from './config/database.config';
 import appConfig from './config/app.config';
 import uploadConfig from './config/upload.config';
-import { FilesModule } from './common/files/file.module';
-import { SearchPaginationModule } from './common/search-pagination/search-pagination.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserController } from './modules/user/infrastructure/http/user.controller';
-import { MailModule } from './shared/infrastructure/mail.module';
 import { MailModule } from './shared/infrastructure/mail/mail.module';
+import { FilesModule } from './shared/files/file.module';
+import { SearchPaginationModule } from './shared/search-pagination/search-pagination.module';
+import mailConfig from './config/mail.config';
+import { validationSchema } from './config/validation';
 
 @Module({
   imports: [
@@ -33,8 +34,9 @@ import { MailModule } from './shared/infrastructure/mail/mail.module';
     }),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, appConfig, uploadConfig],
+      load: [databaseConfig, appConfig, uploadConfig, mailConfig],
       envFilePath: '.env',
+      validationSchema
     }),
     CoursesModule,
     FilesModule,
