@@ -13,8 +13,8 @@ import { UserController } from './modules/user/infrastructure/http/user.controll
 import { MailModule } from './shared/infrastructure/mail/mail.module';
 import { FilesModule } from './shared/files/file.module';
 import { SearchPaginationModule } from './shared/search-pagination/search-pagination.module';
-import mailConfig from './config/mail.config';
 import { validationSchema } from './config/validation';
+import mailConfig from './shared/infrastructure/mail/mail.config';
 
 @Module({
   imports: [
