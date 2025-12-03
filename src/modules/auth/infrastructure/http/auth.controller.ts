@@ -61,6 +61,7 @@ export class AuthController {
       properties: {
         email: { type: 'string', example: 'user@example.com' },
         password: { type: 'string', example: '12345678' },
+        confirmPassword: { type: 'string', example: '12345678' },
         name: { type: 'string', example: 'John Doe' },
       },
     },
@@ -119,9 +120,7 @@ export class AuthController {
   @ApiResponse({ status: 302, description: 'Redirect to Google' })
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  googleAuth() {
-    // initiates Google OAuth2 login flow
-  }
+  googleAuth() {}
 
   @ApiOperation({
     summary: 'Google OAuth callback handler',
