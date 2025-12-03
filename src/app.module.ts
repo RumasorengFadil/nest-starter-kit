@@ -12,6 +12,8 @@ import { FilesModule } from './common/files/file.module';
 import { SearchPaginationModule } from './common/search-pagination/search-pagination.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserController } from './modules/user/infrastructure/http/user.controller';
+import { MailModule } from './shared/infrastructure/mail.module';
+import { MailModule } from './shared/infrastructure/mail/mail.module';
 
 @Module({
   imports: [
@@ -38,6 +40,7 @@ import { UserController } from './modules/user/infrastructure/http/user.controll
     FilesModule,
     SearchPaginationModule,
     AuthModule,
+    MailModule,
   ],
   controllers: [AppController, UserController],
   providers: [AppService],
