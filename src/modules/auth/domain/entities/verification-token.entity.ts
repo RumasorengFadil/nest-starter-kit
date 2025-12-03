@@ -12,6 +12,6 @@ export class VerificationToken {
   @ManyToOne(() => User, user => user.verificationTokens)
   user: User;
 
-  @Column()
+  @Column({type:'timestamp'})
   expiresAt: Date;
 }

@@ -10,11 +10,10 @@ import mailConfig from './mail.config';
   imports: [
     MailerModule.forRootAsync({
       inject: [mailConfig.KEY],
-      useFactory: async (config: ConfigType <typeof mailConfig>) => ({
+      useFactory: async (config: ConfigType<typeof mailConfig>) => ({
         transport: {
           host: config.host,
           port: Number(config.port),
-          secure: config.secure,
           auth: {
             user: config.auth.user,
             pass: config.auth.pass,
@@ -32,5 +31,6 @@ import mailConfig from './mail.config';
     }),
   ],
   providers: [MailService],
+  exports: [MailService], // ← WAJIB
 })
 export class MailModule {}

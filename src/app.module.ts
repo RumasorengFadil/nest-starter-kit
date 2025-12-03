@@ -15,6 +15,8 @@ import { FilesModule } from './shared/files/file.module';
 import { SearchPaginationModule } from './shared/search-pagination/search-pagination.module';
 import { validationSchema } from './config/validation';
 import mailConfig from './shared/infrastructure/mail/mail.config';
+import { VerificationToken } from './modules/auth/domain/entities/verification-token.entity';
+import { User } from './modules/user/domain/entities/user.entity';
 
 @Module({
   imports: [
@@ -27,7 +29,7 @@ import mailConfig from './shared/infrastructure/mail/mail.config';
         username: dbConfig.username,
         password: dbConfig.password,
         database: dbConfig.name,
-        entities: [Course],
+        entities: [Course, VerificationToken, User],
         autoLoadEntities: true, // otomatis load entity
         synchronize: true, //! Jangan true di production!
       }),

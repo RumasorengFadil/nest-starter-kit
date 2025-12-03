@@ -6,6 +6,7 @@ import {
   Response,
   Get,
   Body,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response as ExResponse } from 'express';
@@ -20,13 +21,23 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
+import { RegisterLocalDto } from '../../application/dtos/register-local.dto';
+import { Repository } from 'typeorm';
+import { VerificationToken } from '../../domain/entities/verification-token.entity';
+import { User } from 'src/modules/user/domain/entities/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Controller('auth')
 export class AuthController {
   constructor(
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
     private authService: AuthService,
     private config: ConfigService,
     private jwtService: JwtService,
+
+    @InjectRepository(VerificationToken)
+    private verificationRepo: Repository<VerificationToken>,
   ) {}
 
   @ApiBearerAuth()
@@ -34,7 +45,12 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'User info returned successfully' })
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  me(@GetUser() user) {
+  async me(@GetUser() usr) {
+    const user = await this.userRepo.findOne({
+      where: { id: usr.userId },
+      relations: {verificationTokens:true},
+    });
+
     return user;
   }
 
@@ -51,9 +67,13 @@ export class AuthController {
   })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @Post('register')
-  async register(@Body() body: { email: string; password: string }) {
-    const user = await this.authService.register(body.email, body.password);
-    return { ok: true, user: { id: user.id, email: user.email } };
+  async register(@Body() body: RegisterLocalDto) {
+    const user = await this.authService.register(body);
+    return {
+      ok: true,
+      user: { id: user.id, email: user.email },
+      message: "message: 'Registration successful. Please verify your email.'",
+    };
   }
 
   @ApiOperation({ summary: 'Login user and get tokens' })
@@ -103,7 +123,11 @@ export class AuthController {
     // initiates Google OAuth2 login flow
   }
 
-  @ApiOperation({ summary: 'Google OAuth callback handler', description:'This endpoint redirects the user to Google sign-in page. Cannot be tested via Swagger.' })
+  @ApiOperation({
+    summary: 'Google OAuth callback handler',
+    description:
+      'This endpoint redirects the user to Google sign-in page. Cannot be tested via Swagger.',
+  })
   @ApiResponse({ status: 200, description: 'Google login successful' })
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
@@ -147,7 +171,7 @@ export class AuthController {
     @Request() req,
     @Response({ passthrough: true }) res: ExResponse,
   ) {
-      console.log('COOKIES:', req.cookies);
+    console.log('COOKIES:', req.cookies);
 
     const token = req.cookies['refresh_token'];
     if (!token) return res.status(401).json({ ok: false });
@@ -197,5 +221,11 @@ export class AuthController {
     res.clearCookie('access_token');
     res.clearCookie('refresh_token');
     return { ok: true };
+  }
+  @Get('verify')
+  async verifyEmail(@Query('token') token: string) {
+    this.authService.verifyEmail(token);
+
+    return { message: 'Email verified successfully' };
   }
 }

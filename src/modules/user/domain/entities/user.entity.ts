@@ -7,8 +7,11 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', unique: true, nullable: true })
-  email: string | null;
+  @Column({type:'varchar'})
+  name: string;
+
+  @Column({ type: 'varchar', unique: true})
+  email: string;
 
   @Column({ type: 'varchar', nullable: true })
   password: string | null; // hashed
@@ -16,12 +19,15 @@ export class User {
   @Column({ type: 'enum', enum: AuthProvider, default: AuthProvider.LOCAL })
   provider: AuthProvider;
 
-  @Column({ type: 'varbinary', nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   providerId: string | null; // google id
+
+  @Column({ type: 'boolean', nullable: true })
+  isEmailVerified: boolean | null; // google id
 
   @Column({ type: 'varchar', nullable: true })
   refreshTokenHash: string | null; // hashed refresh token
 
-  @OneToMany(() => VerificationToken, (token) => token.user)
+  @OneToMany(() => VerificationToken, (token) => token.user, {cascade:true})
   verificationTokens: VerificationToken[];
 }

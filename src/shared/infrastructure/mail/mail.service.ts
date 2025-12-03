@@ -2,32 +2,39 @@ import { Inject, Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import type { ConfigType } from '@nestjs/config';
 import appConfig from 'src/config/app.config';
+import { join } from 'path';
+import { existsSync } from 'fs';
 
 @Injectable()
 export class MailService {
   constructor(
-    private mailer: MailerService, 
+    private mailer: MailerService,
     @Inject(appConfig.KEY)
-    private readonly appCfg: ConfigType<typeof appConfig>) {}
+    private readonly appCfg: ConfigType<typeof appConfig>,
+  ) {}
 
-  async sendVerificationEmail(email: string, token: string) {
+  async sendVerificationEmail(email: string | null, token: string) {
+    if (!email) return;
+
     const url = `${this.appCfg.appUrl}/verify?token=${token}`;
 
     await this.mailer.sendMail({
       to: email,
       subject: 'Verify your email address',
-      template: './verify-email',
+      template: 'verify-email',
       context: {
         url,
       },
     });
   }
 
-  async sendWelcomeEmail(email: string, name: string) {
+  async sendWelcomeEmail(email: string | null, name: string) {
+    if (!email) return;
+
     await this.mailer.sendMail({
       to: email,
       subject: 'Welcome to LMS!',
-      template: './welcome-email',
+      template: 'welcome-email',
       context: { name },
     });
   }

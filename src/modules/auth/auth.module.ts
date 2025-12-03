@@ -8,12 +8,15 @@ import { LocalStrategy } from './infrastructure/strategies/local.strategy';
 import { GoogleStrategy } from './infrastructure/strategies/google.strategy';
 import { AuthController } from './infrastructure/http/auth.controller';
 import { User } from '../user/domain/entities/user.entity';
+import { MailModule } from 'src/shared/infrastructure/mail/mail.module';
+import { VerificationToken } from './domain/entities/verification-token.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, VerificationToken]),
     PassportModule,
     JwtModule.register({}), // config via AuthService dynamic usage
+    MailModule,
   ],
   providers: [AuthService, JwtStrategy, LocalStrategy, GoogleStrategy],
   controllers: [AuthController],
