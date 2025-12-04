@@ -120,6 +120,9 @@ export class AuthService {
     displayName?: string;
   }) {
     const email = profile.emails?.[0]?.value;
+    const isVerified = profile.emails?.[0]?.verified ?? false;
+    const displayName = profile.displayName ?? `User`.trim();
+
     let user = await this.userRepo.findOne({
       where: [{ providerId: profile.id }, { email }],
     });
@@ -129,12 +132,19 @@ export class AuthService {
         email: email ?? null,
         provider: AuthProvider.GOOGLE,
         providerId: profile.id,
+        isEmailVerified: isVerified,
+        name: displayName,
       });
       user = await this.userRepo.save(user);
     } else if (!user.providerId) {
       // link provider id if email exists
       user.provider = AuthProvider.GOOGLE;
       user.providerId = profile.id;
+      user.isEmailVerified = user.isEmailVerified || isVerified;
+      user.name = user.name || displayName; // jangan override nama jika sudah ada
+      user = await this.userRepo.save(user);
+    } else if (!user.isEmailVerified) {
+      user.isEmailVerified = user.isEmailVerified || isVerified;
       user = await this.userRepo.save(user);
     }
 
@@ -153,15 +163,12 @@ export class AuthService {
 
     verification.user.isEmailVerified = true;
 
-    await this.userRepo.save(verification.user);
+    const user = await this.userRepo.save(verification.user);
 
     await this.verificationRepo.delete(verification.id);
 
-    await this.mailService.sendWelcomeEmail(
-      verification.user.email,
-      verification.user.name,
-    );
+    await this.mailService.sendWelcomeEmail(user.email, user.name);
 
-    return { message: 'Email verified successfully' };
+    return { message: 'Email verified successfully', user: user };
   }
 }
