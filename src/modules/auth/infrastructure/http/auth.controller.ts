@@ -7,6 +7,7 @@ import {
   Get,
   Body,
   Query,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response as ExResponse } from 'express';
@@ -189,10 +190,8 @@ export class AuthController {
     @Request() req,
     @Response({ passthrough: true }) res: ExResponse,
   ) {
-    console.log('COOKIES:', req.cookies);
-
     const token = req.cookies['refresh_token'];
-    if (!token) return res.status(401).json({ ok: false });
+    if (!token) throw new UnauthorizedException('No refresh token');
 
     try {
       const payload: any = await this.jwtService.verifyAsync(token, {
@@ -241,9 +240,28 @@ export class AuthController {
     return { ok: true };
   }
   @Get('verify')
-  async verifyEmail(@Query('token') token: string) {
-    this.authService.verifyEmail(token);
+  async verifyEmail(
+    @Query('token') token: string,
+    @Response({ passthrough: true }) res: ExResponse,
+  ) {
+    const { user } = await this.authService.verifyEmail(token);
 
-    return { message: 'Email verified successfully' };
+    // generate refresh token baru
+    const tokens = await this.authService.generateTokens(user);
+
+    // set cookies again
+    res.cookie('access_token', tokens.accessToken, {
+      httpOnly: true,
+      secure: this.config.get('NODE_ENV') === 'production',
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000,
+    });
+    res.cookie('refresh_token', tokens.refreshToken, {
+      httpOnly: true,
+      secure: this.config.get('NODE_ENV') === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+    return { message: 'Email verified successfully', verified: true };
   }
 }
