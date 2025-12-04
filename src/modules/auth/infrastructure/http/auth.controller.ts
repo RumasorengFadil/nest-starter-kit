@@ -13,7 +13,6 @@ import type { Response as ExResponse } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../../domain/services/auth.service';
 import { JwtService } from '@nestjs/jwt';
-import { JwtAuthGuard } from './jwt-auth.guard';
 import { GetUser } from './get-user.decorator';
 import {
   ApiBearerAuth,
@@ -26,6 +25,7 @@ import { Repository } from 'typeorm';
 import { VerificationToken } from '../../domain/entities/verification-token.entity';
 import { User } from 'src/modules/user/domain/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -48,7 +48,7 @@ export class AuthController {
   async me(@GetUser() usr) {
     const user = await this.userRepo.findOne({
       where: { id: usr.userId },
-      relations: {verificationTokens:true},
+      relations: { verificationTokens: true },
     });
 
     return user;
@@ -68,8 +68,27 @@ export class AuthController {
   })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @Post('register')
-  async register(@Body() body: RegisterLocalDto) {
+  async register(
+    @Body() body: RegisterLocalDto,
+    @Response({ passthrough: true }) res: ExResponse,
+  ) {
     const user = await this.authService.register(body);
+
+    const tokens = await this.authService.generateTokens(user);
+    // set cookies
+    res.cookie('access_token', tokens.accessToken, {
+      httpOnly: true,
+      secure: this.config.get('NODE_ENV') === 'production',
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+    res.cookie('refresh_token', tokens.refreshToken, {
+      httpOnly: true,
+      secure: this.config.get('NODE_ENV') === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
+
     return {
       ok: true,
       user: { id: user.id, email: user.email },

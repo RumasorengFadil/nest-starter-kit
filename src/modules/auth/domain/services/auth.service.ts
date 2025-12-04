@@ -53,7 +53,7 @@ export class AuthService {
     });
 
     this.verificationRepo.save(verificationToken);
-    
+
     await this.mailService.sendVerificationEmail(user.email, token);
 
     return user;
@@ -74,6 +74,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       provider: user.provider,
+      isEmailVerified: user.isEmailVerified,
     };
 
     const accessToken = await this.jwtService.signAsync(payload, {
