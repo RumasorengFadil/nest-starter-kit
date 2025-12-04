@@ -2,8 +2,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import type { ConfigType } from '@nestjs/config';
 import appConfig from 'src/config/app.config';
-import { join } from 'path';
-import { existsSync } from 'fs';
 
 @Injectable()
 export class MailService {
@@ -16,7 +14,7 @@ export class MailService {
   async sendVerificationEmail(email: string | null, token: string) {
     if (!email) return;
 
-    const url = `${this.appCfg.appUrl}/verify?token=${token}`;
+    const url = `${this.appCfg.appUrl}/verify-email?token=${token}`;
 
     await this.mailer.sendMail({
       to: email,
