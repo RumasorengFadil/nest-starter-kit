@@ -2,9 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CoursesModule } from './courses/courses.module';
 import { ConfigModule, ConfigType } from '@nestjs/config';
-import { Course } from './courses/course.entity';
 import databaseConfig from './config/database.config';
 import appConfig from './config/app.config';
 import uploadConfig from './config/upload.config';
@@ -18,6 +16,7 @@ import mailConfig from './shared/infrastructure/mail/mail.config';
 import { VerificationToken } from './modules/auth/domain/entities/verification-token.entity';
 import { User } from './modules/user/domain/entities/user.entity';
 import { CourseModule } from './modules/course/course.module';
+import { Course } from './modules/course/domain/entities/course.entity';
 
 @Module({
   imports: [
@@ -41,7 +40,6 @@ import { CourseModule } from './modules/course/course.module';
       envFilePath: '.env',
       validationSchema
     }),
-    CoursesModule,
     FilesModule,
     SearchPaginationModule,
     AuthModule,
