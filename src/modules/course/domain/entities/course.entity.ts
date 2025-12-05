@@ -47,9 +47,9 @@ export class Course {
 
   /** Timestamp when the course was created */
   @CreateDateColumn()
-  createdAt: Date;
+  created_at: Date;
 
   /** Timestamp when the course was last updated */
   @UpdateDateColumn()
-  updatedAt: Date;
+  updated_at: Date;
 }
