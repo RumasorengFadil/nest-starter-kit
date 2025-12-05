@@ -10,11 +10,11 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { User } from 'src/modules/user/domain/entities/user.entity';
-import { AuthProvider } from 'src/modules/user/domain/provider/auth.provider';
 import { VerificationToken } from '../entities/verification-token.entity';
 import { randomBytes } from 'crypto';
 import { MailService } from 'src/shared/infrastructure/mail/mail.service';
 import { RegisterLocalDto } from '../../application/dtos/register-local.dto';
+import { AuthProvider } from 'src/modules/user/domain/enums/auth-provider.enum';
 
 @Injectable()
 export class AuthService {
@@ -74,7 +74,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       provider: user.provider,
-      isEmailVerified: user.isEmailVerified,
+      is_email_verified: user.is_email_verified,
     };
 
     const accessToken = await this.jwtService.signAsync(payload, {
@@ -90,18 +90,18 @@ export class AuthService {
       },
     );
     const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
-    await this.userRepo.update(user.id, { refreshTokenHash });
+    await this.userRepo.update(user.id, { refresh_token_hash:refreshTokenHash });
 
     return { accessToken, refreshToken };
   }
 
   async refreshTokens(userId: string, providedRefreshToken: string) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
-    if (!user || !user.refreshTokenHash) throw new UnauthorizedException();
+    if (!user || !user.refresh_token_hash) throw new UnauthorizedException();
 
     const valid = await bcrypt.compare(
       providedRefreshToken,
-      user.refreshTokenHash,
+      user.refresh_token_hash,
     );
     if (!valid) throw new UnauthorizedException();
 
@@ -110,7 +110,7 @@ export class AuthService {
   }
 
   async revokeRefreshToken(userId: string) {
-    await this.userRepo.update(userId, { refreshTokenHash: null });
+    await this.userRepo.update(userId, { refresh_token_hash: null });
   }
 
   // Upsert user from Google profile
@@ -124,27 +124,27 @@ export class AuthService {
     const displayName = profile.displayName ?? `User`.trim();
 
     let user = await this.userRepo.findOne({
-      where: [{ providerId: profile.id }, { email }],
+      where: [{ provider_id: profile.id }, { email }],
     });
 
     if (!user) {
       user = this.userRepo.create({
         email: email ?? null,
         provider: AuthProvider.GOOGLE,
-        providerId: profile.id,
-        isEmailVerified: isVerified,
+        provider_id: profile.id,
+        is_email_verified: isVerified,
         name: displayName,
       });
       user = await this.userRepo.save(user);
-    } else if (!user.providerId) {
+    } else if (!user.provider_id) {
       // link provider id if email exists
       user.provider = AuthProvider.GOOGLE;
-      user.providerId = profile.id;
-      user.isEmailVerified = user.isEmailVerified || isVerified;
+      user.provider_id = profile.id;
+      user.is_email_verified = user.is_email_verified || isVerified;
       user.name = user.name || displayName; // jangan override nama jika sudah ada
       user = await this.userRepo.save(user);
-    } else if (!user.isEmailVerified) {
-      user.isEmailVerified = user.isEmailVerified || isVerified;
+    } else if (!user.is_email_verified) {
+      user.is_email_verified = user.is_email_verified || isVerified;
       user = await this.userRepo.save(user);
     }
 
@@ -161,7 +161,7 @@ export class AuthService {
     if (verification.expiresAt < new Date())
       throw new BadRequestException('Token expired');
 
-    verification.user.isEmailVerified = true;
+    verification.user.is_email_verified = true;
 
     const user = await this.userRepo.save(verification.user);
 
