@@ -17,6 +17,7 @@ import { validationSchema } from './config/validation';
 import mailConfig from './shared/infrastructure/mail/mail.config';
 import { VerificationToken } from './modules/auth/domain/entities/verification-token.entity';
 import { User } from './modules/user/domain/entities/user.entity';
+import { CourseModule } from './modules/course/course.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { User } from './modules/user/domain/entities/user.entity';
     SearchPaginationModule,
     AuthModule,
     MailModule,
+    CourseModule,
   ],
   controllers: [AppController, UserController],
   providers: [AppService],
