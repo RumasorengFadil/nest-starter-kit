@@ -49,7 +49,7 @@ export class AuthController {
   async me(@GetUser() usr) {
     const user = await this.userRepo.findOne({
       where: { id: usr.userId },
-      relations: { verificationTokens: true },
+      relations: { verification_tokens: true },
     });
 
     return user;
