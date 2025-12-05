@@ -9,7 +9,7 @@ export class VerificationToken {
   @Column()
   token: string;
 
-  @ManyToOne(() => User, user => user.verificationTokens)
+  @ManyToOne(() => User, user => user.verification_tokens)
   user: User;
 
   @Column({type:'timestamp'})
